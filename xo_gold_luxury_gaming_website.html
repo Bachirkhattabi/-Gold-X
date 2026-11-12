@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XO GOLD - Luxury Tic-Tac-Toe</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            100: '#FFF9D6',
+                            300: '#F3E5AB',
+                            400: '#E6CA65',
+                            500: '#D4AF37',
+                            600: '#AA8828',
+                            700: '#80631A',
+                            800: '#55410E',
+                            900: '#2A2005',
+                        },
+                        dark: {
+                            base: '#09090b',
+                            card: '#121217',
+                            border: '#23232c',
+                            hover: '#1a1a23'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Cinzel', 'serif'],
+                        sans: ['Outfit', 'sans-serif']
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 2s infinite ease-in-out',
+                        'shimmer': 'shimmer 3s infinite linear',
+                        'float': 'float 4s infinite ease-in-out'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 15px rgba(212, 175, 55, 0.2)' },
+                            '50%': { boxShadow: '0 0 30px rgba(212, 175, 55, 0.6)' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-6px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #09090b;
+            color: #f3e5ab;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF9D6 0%, #D4AF37 50%, #AA8828 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gold-border-gradient {
+            border: 1px solid transparent;
+            background-image: linear-gradient(#121217, #121217), linear-gradient(135deg, rgba(212, 175, 55, 0.6), rgba(85, 65, 14, 0.2));
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .gold-btn {
+            background: linear-gradient(135deg, #D4AF37 0%, #997A1E 100%);
+            color: #000;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+        }
+
+        .gold-btn:hover {
+            background: linear-gradient(135deg, #FFF9D6 0%, #D4AF37 100%);
+            box-shadow: 0 6px 25px rgba(212, 175, 55, 0.45);
+            transform: translateY(-2px);
+        }
+
+        .gold-btn:active {
+            transform: translateY(0);
+        }
+
+        .glass-panel {
+            background: rgba(18, 18, 23, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .board-cell {
+            position: relative;
+            background: linear-gradient(145deg, #15151c, #0d0d11);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .board-cell:hover:not(.occupied):not(.disabled) {
+            border-color: rgba(212, 175, 55, 0.6);
+            box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.15), 0 0 15px rgba(212, 175, 55, 0.2);
+            transform: scale(1.02);
+        }
+
+        /* SVG Symbol Animations */
+        .symbol-x path {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawSymbol 0.4s ease-out forwards;
+        }
+
+        .symbol-o circle {
+            stroke-dasharray: 280;
+            stroke-dashoffset: 280;
+            animation: drawSymbol 0.5s ease-out forwards;
+        }
+
+        @keyframes drawSymbol {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Winning Line Glow */
+        .winning-cell {
+            background: linear-gradient(145deg, #2a2208, #181404) !important;
+            border-color: #FFD700 !important;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 215, 0, 0.4) !important;
+            animation: pulseGlow 1.5s infinite ease-in-out;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2005;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-gold-500 selection:text-black">
+
+    <!-- Canvas Background for Particles -->
+    <canvas id="particleCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <!-- App Container -->
+    <div id="app" class="relative z-10 min-h-screen flex flex-col justify-between max-w-5xl mx-auto px-4 py-6">
+        
+        <!-- Header / Navigation Bar -->
+        <header class="flex justify-between items-center py-4 border-b border-gold-500/20 glass-panel px-6 rounded-2xl mb-6">
+            <div class="flex items-center space-x-3 cursor-pointer" id="headerLogo">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-gold-700 via-gold-500 to-gold-300 p-0.5 flex items-center justify-center shadow-lg shadow-gold-500/20">
+                    <div class="w-full h-full bg-dark-base rounded-[10px] flex items-center justify-center font-serif font-black text-gold-400 text-xl">XO</div>
+                </div>
+                <h1 class="font-serif font-bold text-2xl tracking-wider gold-gradient-text">XO GOLD</h1>
+            </div>
+
+            <!-- Controls (Sound, History, Reset) -->
+            <div class="flex items-center space-x-3">
+                <button id="toggleAudioBtn" class="w-10 h-10 rounded-xl border border-gold-500/30 flex items-center justify-center hover:bg-gold-500/10 text-gold-400 transition-colors" title="Toggle Sound">
+                    <i class="fa-solid fa-volume-high text-lg" id="audioIcon"></i>
+                </button>
+                <button id="openHistoryBtn" class="w-10 h-10 rounded-xl border border-gold-500/30 flex items-center justify-center hover:bg-gold-500/10 text-gold-400 transition-colors" title="Match History">
+                    <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                </button>
+                <button id="resetScoresBtn" class="w-10 h-10 rounded-xl border border-gold-500/30 flex items-center justify-center hover:bg-gold-500/10 text-gold-400 transition-colors" title="Reset Scores">
+                    <i class="fa-solid fa-trophy text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-grow flex items-center justify-center relative">
+            
+            <!-- SCREEN 1: LANDING & SETUP MENU -->
+            <section id="menuScreen" class="w-full max-w-lg glass-panel rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl border border-gold-500/30 animate-float">
+                <div class="text-center space-y-2">
+                    <h2 class="font-serif text-3xl font-extrabold gold-gradient-text tracking-wide">LUXURY TIC-TAC-TOE</h2>
+                    <p class="text-gold-300/70 text-sm">Experience the classic duel with unmatched elegance.</p>
+                </div>
+
+                <!-- Mode Select -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold tracking-wider text-gold-400 uppercase">Game Mode</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" id="modePvpBtn" class="mode-btn py-3 px-4 rounded-xl border border-gold-500/40 font-semibold text-sm flex items-center justify-center space-x-2 bg-gold-500/10 text-gold-300 transition-all">
+                            <i class="fa-solid fa-users"></i>
+                            <span>Player vs Player</span>
+                        </button>
+                        <button type="button" id="modeAiBtn" class="mode-btn py-3 px-4 rounded-xl border border-gold-500/20 font-semibold text-sm flex items-center justify-center space-x-2 bg-dark-card text-gold-300/60 hover:text-gold-300 transition-all">
+                            <i class="fa-solid fa-robot"></i>
+                            <span>Player vs AI</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Difficulty Options (Hidden in PvP) -->
+                <div id="aiDifficultyGroup" class="space-y-2 hidden transition-all duration-300">
+                    <label class="block text-xs font-semibold tracking-wider text-gold-400 uppercase">AI Difficulty</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" data-diff="easy" class="diff-btn py-2 rounded-lg border border-gold-500/20 text-xs font-semibold text-gold-300/70 hover:bg-gold-500/10">Easy</button>
+                        <button type="button" data-diff="medium" class="diff-btn py-2 rounded-lg border border-gold-500/20 text-xs font-semibold text-gold-300/70 hover:bg-gold-500/10">Medium</button>
+                        <button type="button" data-diff="hard" class="diff-btn py-2 rounded-lg border border-gold-500/40 text-xs font-semibold bg-gold-500/20 text-gold-300 active-diff">Hard (Minimax)</button>
+                    </div>
+                </div>
+
+                <!-- Player Custom Names -->
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gold-400/80 mb-1">Player X Name</label>
+                            <input type="text" id="playerXNameInput" value="Player 1" class="w-full bg-dark-base border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-gold-100 focus:outline-none focus:border-gold-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gold-400/80 mb-1" id="playerONameLabel">Player O Name</label>
+                            <input type="text" id="playerONameInput" value="Player 2" class="w-full bg-dark-base border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-gold-100 focus:outline-none focus:border-gold-500 transition-colors">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Who Starts First -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold tracking-wider text-gold-400 uppercase">First Turn</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" data-starter="X" class="starter-btn py-2 rounded-lg border border-gold-500/40 text-xs font-semibold bg-gold-500/20 text-gold-300 active-starter">Player X</button>
+                        <button type="button" data-starter="O" class="starter-btn py-2 rounded-lg border border-gold-500/20 text-xs font-semibold text-gold-300/70 hover:bg-gold-500/10">Player O</button>
+                        <button type="button" data-starter="R" class="starter-btn py-2 rounded-lg border border-gold-500/20 text-xs font-semibold text-gold-300/70 hover:bg-gold-500/10">Random</button>
+                    </div>
+                </div>
+
+                <!-- Start Game Action Button -->
+                <button id="startGameBtn" class="w-full gold-btn py-4 rounded-xl font-serif font-bold text-lg tracking-wider flex items-center justify-center space-x-2">
+                    <span>ENTER THE ARENA</span>
+                    <i class="fa-solid fa-chess-board text-base"></i>
+                </button>
+            </section>
+
+            <!-- SCREEN 2: GAME BOARD -->
+            <section id="gameScreen" class="w-full max-w-2xl hidden flex-col items-center space-y-6">
+                
+                <!-- Status & Player Turn Bar -->
+                <div class="w-full glass-panel rounded-2xl p-4 flex items-center justify-between shadow-xl">
+                    <!-- Player X Info -->
+                    <div id="playerXCard" class="flex items-center space-x-3 p-2 rounded-xl border border-transparent transition-all">
+                        <div class="w-10 h-10 rounded-lg border border-gold-500/40 bg-gold-500/10 flex items-center justify-center text-gold-400 font-bold text-xl font-serif">X</div>
+                        <div>
+                            <div class="text-sm font-bold text-gold-200" id="displayPlayerXName">Player 1</div>
+                            <div class="text-xs text-gold-400/60 font-semibold" id="displayPlayerXScore">Wins: 0</div>
+                        </div>
+                    </div>
+
+                    <!-- Center Turn Indicator / AI Thinking Status -->
+                    <div class="text-center px-4">
+                        <div id="turnIndicator" class="text-xs uppercase font-bold tracking-widest text-gold-400/80 mb-1">Turn</div>
+                        <div id="turnStatus" class="font-serif font-bold text-lg gold-gradient-text flex items-center justify-center space-x-2">
+                            <span id="turnText">Player X</span>
+                            <span id="aiLoader" class="hidden"><i class="fa-solid fa-circle-notch animate-spin text-gold-400 text-sm"></i></span>
+                        </div>
+                    </div>
+
+                    <!-- Player O Info -->
+                    <div id="playerOCard" class="flex items-center space-x-3 p-2 rounded-xl border border-transparent transition-all">
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-gold-200" id="displayPlayerOName">Player 2</div>
+                            <div class="text-xs text-gold-400/60 font-semibold" id="displayPlayerOScore">Wins: 0</div>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg border border-gold-500/40 bg-gold-500/10 flex items-center justify-center text-gold-400 font-bold text-xl font-serif">O</div>
+                    </div>
+                </div>
+
+                <!-- 3x3 Tic-Tac-Toe Grid -->
+                <div class="relative w-full max-w-md aspect-square p-3 glass-panel rounded-3xl shadow-2xl gold-border-gradient">
+                    <div class="grid grid-cols-3 grid-rows-3 gap-3 w-full h-full" id="boardGrid">
+                        <!-- 9 Cells generated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Bottom Game Bar (Restart, Menu, Draw Count) -->
+                <div class="w-full flex items-center justify-between text-xs text-gold-400/70 px-2">
+                    <button id="backToMenuBtn" class="flex items-center space-x-2 hover:text-gold-300 transition-colors py-2 px-3 rounded-lg border border-gold-500/20 bg-dark-card">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Menu</span>
+                    </button>
+
+                    <div class="font-semibold" id="drawScoreDisplay">Draws: 0</div>
+
+                    <button id="restartGameBtn" class="flex items-center space-x-2 hover:text-gold-300 transition-colors py-2 px-3 rounded-lg border border-gold-500/20 bg-dark-card">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Restart Match</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-xs text-gold-500/40 py-2">
+            XO GOLD &copy; 2026 &bull; Crafted with pure HTML, CSS & JavaScript
+        </footer>
+    </div>
+
+    <!-- MODAL 1: GAME OVER ANNOUNCEMENT -->
+    <div id="winnerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden transition-opacity duration-300">
+        <div class="glass-panel p-8 rounded-3xl max-w-sm w-full mx-4 text-center space-y-6 border border-gold-500/50 shadow-2xl transform transition-transform scale-95" id="winnerModalCard">
+            <div class="w-20 h-20 rounded-full bg-gold-500/10 border-2 border-gold-400 mx-auto flex items-center justify-center text-gold-400 text-3xl shadow-lg shadow-gold-500/30">
+                <i class="fa-solid fa-crown" id="winnerIcon"></i>
+            </div>
+
+            <div class="space-y-2">
+                <h3 id="winnerTitle" class="font-serif text-3xl font-extrabold gold-gradient-text">VICTORY!</h3>
+                <p id="winnerMessage" class="text-gold-200/80 text-sm">Player X dominated the match.</p>
+            </div>
+
+            <div class="flex flex-col space-y-3 pt-2">
+                <button id="modalPlayAgainBtn" class="gold-btn py-3 rounded-xl font-bold text-sm tracking-wide">
+                    PLAY AGAIN
+                </button>
+                <button id="modalMenuBtn" class="py-3 rounded-xl border border-gold-500/30 text-gold-300 hover:bg-gold-500/10 font-semibold text-sm transition-colors">
+                    MAIN MENU
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: RESET CONFIRMATION -->
+    <div id="resetModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-panel p-6 rounded-2xl max-w-xs w-full mx-4 text-center space-y-5 border border-gold-500/40">
+            <div class="text-gold-400 text-3xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h4 class="font-serif font-bold text-lg text-gold-200">Reset Scoreboard?</h4>
+                <p class="text-xs text-gold-400/60 mt-1">This will permanently clear all win statistics and match logs.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button id="cancelResetBtn" class="py-2.5 rounded-xl border border-gold-500/30 text-gold-300 text-xs font-semibold">Cancel</button>
+                <button id="confirmResetBtn" class="py-2.5 rounded-xl bg-red-900/60 hover:bg-red-900 border border-red-500/40 text-red-200 text-xs font-semibold">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: MATCH HISTORY DRAWER -->
+    <div id="historyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-panel p-6 rounded-3xl max-w-md w-full mx-4 space-y-4 border border-gold-500/40 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-gold-500/20">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-clock-rotate-left text-gold-400"></i>
+                    <h3 class="font-serif font-bold text-lg gold-gradient-text">Match History</h3>
+                </div>
+                <button id="closeHistoryBtn" class="text-gold-400/60 hover:text-gold-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- History List Container -->
+            <div id="historyList" class="flex-grow overflow-y-auto space-y-2 pr-1 my-2">
+                <!-- Dynamically populated -->
+            </div>
+
+            <div class="pt-2 flex justify-between items-center border-t border-gold-500/20">
+                <button id="clearHistoryBtn" class="text-xs text-red-400/80 hover:text-red-300 flex items-center space-x-1">
+                    <i class="fa-solid fa-trash"></i>
+                    <span>Clear History</span>
+                </button>
+                <span class="text-xs text-gold-400/50" id="historyCount">0 matches logged</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT GAME LOGIC -->
+    <script>
+        /**
+         * XO GOLD - Luxury Tic-Tac-Toe Core Engine
+         * Built with Web Audio API, Minimax AI, Particle Systems, and LocalStorage persistence.
+         */
+
+        // --- GLOBAL STATE ---
+        const state = {
+            mode: 'pvp', // 'pvp' or 'ai'
+            difficulty: 'hard', // 'easy', 'medium', 'hard'
+            starter: 'X', // 'X', 'O', or 'R'
+            playerXName: 'Player 1',
+            playerOName: 'Player 2',
+            audioMuted: false,
+            
+            // Game Session State
+            board: Array(9).fill(null),
+            currentTurn: 'X',
+            gameActive: false,
+            winningCombo: null,
+            isAiThinking: false,
+
+            // Scoreboard (LocalStorage backed)
+            scores: {
+                pvp: { x: 0, o: 0, draws: 0 },
+                ai: { x: 0, o: 0, draws: 0 }
+            },
+            history: []
+        };
+
+        // --- WINNING COMBINATIONS CONSTANT ---
+        const WINNING_COMBOS = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]              // Diagonals
+        ];
+
+        // --- WEB AUDIO SYNTHESIZER ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playClick() {
+                if (state.audioMuted) return;
+                this.init();
+                if (!this.ctx) return;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.04);
+                
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.04);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.04);
+            }
+
+            playMarkX() {
+                if (state.audioMuted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, this.ctx.currentTime + 0.08); // E5
+
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.09);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.09);
+            }
+
+            playMarkO() {
+                if (state.audioMuted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(659.25, this.ctx.currentTime); // E5
+                osc.frequency.exponentialRampToValueAtTime(523.25, this.ctx.currentTime + 0.08); // C5
+
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.09);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.09);
+            }
+
+            playWin() {
+                if (state.audioMuted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+
+                    const startTime = this.ctx.currentTime + (idx * 0.08);
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.35);
+                });
+            }
+
+            playDraw() {
+                if (state.audioMuted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(150, this.ctx.currentTime + 0.25);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+        }
+
+        const sounds = new SoundEngine();
+
+        // --- CANVAS GOLD DUST PARTICLE SYSTEM ---
+        function initParticles() {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+
+                reset() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedY = -(Math.random() * 0.4 + 0.1);
+                    this.speedX = (Math.random() - 0.5) * 0.2;
+                    this.opacity = Math.random() * 0.5 + 0.2;
+                    this.fadeSpeed = Math.random() * 0.005 + 0.002;
+                }
+
+                update() {
+                    this.y += this.speedY;
+                    this.x += this.speedX;
+                    this.opacity -= this.fadeSpeed;
+
+                    if (this.y < 0 || this.opacity <= 0) {
+                        this.reset();
+                        this.y = height + 10;
+                    }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(212, 175, 55, ${this.opacity})`;
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = '#D4AF37';
+                    ctx.fill();
+                }
+            }
+
+            // Create 50 golden ambient dust particles
+            for (let i = 0; i < 45; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        // --- LOCAL STORAGE ENGINE ---
+        function loadStorage() {
+            try {
+                const storedScores = localStorage.getItem('xogold_scores');
+                if (storedScores) state.scores = JSON.parse(storedScores);
+
+                const storedHistory = localStorage.getItem('xogold_history');
+                if (storedHistory) state.history = JSON.parse(storedHistory);
+            } catch (e) {
+                console.warn('LocalStorage error:', e);
+            }
+        }
+
+        function saveStorage() {
+            try {
+                localStorage.setItem('xogold_scores', JSON.stringify(state.scores));
+                localStorage.setItem('xogold_history', JSON.stringify(state.history));
+            } catch (e) {
+                console.warn('LocalStorage save error:', e);
+            }
+        }
+
+        // --- MINIMAX AI ALGORITHM ENGINE ---
+        const AI = {
+            // Evaluates board score relative to AI ('O')
+            evaluate(board) {
+                for (let combo of WINNING_COMBOS) {
+                    const [a, b, c] = combo;
+                    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                        if (board[a] === 'O') return +10;
+                        if (board[a] === 'X') return -10;
+                    }
+                }
+                return 0;
+            },
+
+            isMovesLeft(board) {
+                return board.includes(null);
+            },
+
+            minimax(board, depth, isMax) {
+                const score = this.evaluate(board);
+
+                // If Maximizer (AI - O) won
+                if (score === 10) return score - depth;
+                // If Minimizer (Human - X) won
+                if (score === -10) return score + depth;
+                // If no more moves & draw
+                if (!this.isMovesLeft(board)) return 0;
+
+                if (isMax) {
+                    let best = -1000;
+                    for (let i = 0; i < 9; i++) {
+                        if (board[i] === null) {
+                            board[i] = 'O';
+                            best = Math.max(best, this.minimax(board, depth + 1, false));
+                            board[i] = null;
+                        }
+                    }
+                    return best;
+                } else {
+                    let best = 1000;
+                    for (let i = 0; i < 9; i++) {
+                        if (board[i] === null) {
+                            board[i] = 'X';
+                            best = Math.min(best, this.minimax(board, depth + 1, true));
+                            board[i] = null;
+                        }
+                    }
+                    return best;
+                }
+            },
+
+            getBestMove(board) {
+                let bestVal = -1000;
+                let bestMove = -1;
+
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === null) {
+                        board[i] = 'O';
+                        let moveVal = this.minimax(board, 0, false);
+                        board[i] = null;
+
+                        if (moveVal > bestVal) {
+                            bestVal = moveVal;
+                            bestMove = i;
+                        }
+                    }
+                }
+                return bestMove;
+            },
+
+            getRandomMove(board) {
+                const available = [];
+                board.forEach((val, index) => {
+                    if (val === null) available.push(index);
+                });
+                if (available.length === 0) return -1;
+                return available[Math.floor(Math.random() * available.length)];
+            },
+
+            getMediumMove(board) {
+                // 60% optimal move, 40% random move
+                if (Math.random() < 0.6) {
+                    return this.getBestMove(board);
+                } else {
+                    return this.getRandomMove(board);
+                }
+            },
+
+            computeMove(board, difficulty) {
+                if (difficulty === 'easy') return this.getRandomMove(board);
+                if (difficulty === 'medium') return this.getMediumMove(board);
+                return this.getBestMove(board); // Hard (Minimax)
+            }
+        };
+
+        // --- DOM UI & RENDERING ---
+        const DOM = {
+            // Screens
+            menuScreen: document.getElementById('menuScreen'),
+            gameScreen: document.getElementById('gameScreen'),
+            
+            // Inputs & Controls
+            modePvpBtn: document.getElementById('modePvpBtn'),
+            modeAiBtn: document.getElementById('modeAiBtn'),
+            aiDifficultyGroup: document.getElementById('aiDifficultyGroup'),
+            diffBtns: document.querySelectorAll('.diff-btn'),
+            starterBtns: document.querySelectorAll('.starter-btn'),
+            playerXNameInput: document.getElementById('playerXNameInput'),
+            playerONameInput: document.getElementById('playerONameInput'),
+            playerONameLabel: document.getElementById('playerONameLabel'),
+            startGameBtn: document.getElementById('startGameBtn'),
+
+            // Game Board & Displays
+            boardGrid: document.getElementById('boardGrid'),
+            turnText: document.getElementById('turnText'),
+            turnIndicator: document.getElementById('turnIndicator'),
+            aiLoader: document.getElementById('aiLoader'),
+            displayPlayerXName: document.getElementById('displayPlayerXName'),
+            displayPlayerOName: document.getElementById('displayPlayerOName'),
+            displayPlayerXScore: document.getElementById('displayPlayerXScore'),
+            displayPlayerOScore: document.getElementById('displayPlayerOScore'),
+            drawScoreDisplay: document.getElementById('drawScoreDisplay'),
+            playerXCard: document.getElementById('playerXCard'),
+            playerOCard: document.getElementById('playerOCard'),
+
+            // Action Buttons
+            backToMenuBtn: document.getElementById('backToMenuBtn'),
+            restartGameBtn: document.getElementById('restartGameBtn'),
+            toggleAudioBtn: document.getElementById('toggleAudioBtn'),
+            audioIcon: document.getElementById('audioIcon'),
+            resetScoresBtn: document.getElementById('resetScoresBtn'),
+            openHistoryBtn: document.getElementById('openHistoryBtn'),
+            closeHistoryBtn: document.getElementById('closeHistoryBtn'),
+
+            // Modals
+            winnerModal: document.getElementById('winnerModal'),
+            winnerTitle: document.getElementById('winnerTitle'),
+            winnerMessage: document.getElementById('winnerMessage'),
+            winnerIcon: document.getElementById('winnerIcon'),
+            modalPlayAgainBtn: document.getElementById('modalPlayAgainBtn'),
+            modalMenuBtn: document.getElementById('modalMenuBtn'),
+            
+            resetModal: document.getElementById('resetModal'),
+            confirmResetBtn: document.getElementById('confirmResetBtn'),
+            cancelResetBtn: document.getElementById('cancelResetBtn'),
+
+            historyModal: document.getElementById('historyModal'),
+            historyList: document.getElementById('historyList'),
+            historyCount: document.getElementById('historyCount'),
+            clearHistoryBtn: document.getElementById('clearHistoryBtn')
+        };
+
+        // Render standard SVG vector graphics for X and O
+        function getSymbolSVG(symbol) {
+            if (symbol === 'X') {
+                return `
+                    <svg class="w-12 h-12 md:w-16 md:h-16 symbol-x" viewBox="0 0 100 100">
+                        <path d="M 25,25 L 75,75 M 75,25 L 25,75" 
+                              stroke="#FFD700" 
+                              stroke-width="12" 
+                              stroke-linecap="round" 
+                              fill="none" 
+                              style="filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));" />
+                    </svg>`;
+            } else if (symbol === 'O') {
+                return `
+                    <svg class="w-12 h-12 md:w-16 md:h-16 symbol-o" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="30" 
+                                stroke="#F3E5AB" 
+                                stroke-width="12" 
+                                stroke-linecap="round" 
+                                fill="none" 
+                                style="filter: drop-shadow(0 0 8px rgba(243, 229, 171, 0.8));" />
+                    </svg>`;
+            }
+            return '';
+        }
+
+        // --- GAME CONTROLLER ---
+        function initApp() {
+            loadStorage();
+            initParticles();
+            setupEventListeners();
+            updateScoresUI();
+        }
+
+        function setupEventListeners() {
+            // Mode Select Toggle
+            DOM.modePvpBtn.addEventListener('click', () => setMode('pvp'));
+            DOM.modeAiBtn.addEventListener('click', () => setMode('ai'));
+
+            // Difficulty Buttons
+            DOM.diffBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    sounds.playClick();
+                    DOM.diffBtns.forEach(b => b.classList.remove('active-diff', 'bg-gold-500/20', 'border-gold-500/40'));
+                    DOM.diffBtns.forEach(b => b.classList.add('border-gold-500/20', 'text-gold-300/70'));
+                    
+                    e.currentTarget.classList.add('active-diff', 'bg-gold-500/20', 'border-gold-500/40');
+                    e.currentTarget.classList.remove('text-gold-300/70');
+                    state.difficulty = e.currentTarget.dataset.diff;
+                });
+            });
+
+            // Starter Buttons
+            DOM.starterBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    sounds.playClick();
+                    DOM.starterBtns.forEach(b => b.classList.remove('active-starter', 'bg-gold-500/20', 'border-gold-500/40'));
+                    DOM.starterBtns.forEach(b => b.classList.add('border-gold-500/20', 'text-gold-300/70'));
+                    
+                    e.currentTarget.classList.add('active-starter', 'bg-gold-500/20', 'border-gold-500/40');
+                    e.currentTarget.classList.remove('text-gold-300/70');
+                    state.starter = e.currentTarget.dataset.starter;
+                });
+            });
+
+            // Start Game Action
+            DOM.startGameBtn.addEventListener('click', () => {
+                sounds.playClick();
+                launchGame();
+            });
+
+            // In-Game Buttons
+            DOM.backToMenuBtn.addEventListener('click', () => {
+                sounds.playClick();
+                showScreen('menu');
+            });
+            DOM.restartGameBtn.addEventListener('click', () => {
+                sounds.playClick();
+                resetMatch();
+            });
+
+            // Audio Toggle
+            DOM.toggleAudioBtn.addEventListener('click', () => {
+                state.audioMuted = !state.audioMuted;
+                if (state.audioMuted) {
+                    DOM.audioIcon.className = 'fa-solid fa-volume-xmark text-lg text-gold-500/40';
+                } else {
+                    DOM.audioIcon.className = 'fa-solid fa-volume-high text-lg text-gold-400';
+                    sounds.playClick();
+                }
+            });
+
+            // Winner Modal Actions
+            DOM.modalPlayAgainBtn.addEventListener('click', () => {
+                sounds.playClick();
+                hideModal(DOM.winnerModal);
+                resetMatch();
+            });
+            DOM.modalMenuBtn.addEventListener('click', () => {
+                sounds.playClick();
+                hideModal(DOM.winnerModal);
+                showScreen('menu');
+            });
+
+            // Reset Score Modal
+            DOM.resetScoresBtn.addEventListener('click', () => {
+                sounds.playClick();
+                showModal(DOM.resetModal);
+            });
+            DOM.cancelResetBtn.addEventListener('click', () => {
+                sounds.playClick();
+                hideModal(DOM.resetModal);
+            });
+            DOM.confirmResetBtn.addEventListener('click', () => {
+                sounds.playClick();
+                resetAllScores();
+                hideModal(DOM.resetModal);
+            });
+
+            // Match History Modal
+            DOM.openHistoryBtn.addEventListener('click', () => {
+                sounds.playClick();
+                renderHistoryUI();
+                showModal(DOM.historyModal);
+            });
+            DOM.closeHistoryBtn.addEventListener('click', () => {
+                sounds.playClick();
+                hideModal(DOM.historyModal);
+            });
+            DOM.clearHistoryBtn.addEventListener('click', () => {
+                sounds.playClick();
+                state.history = [];
+                saveStorage();
+                renderHistoryUI();
+            });
+
+            // Header Logo click to return home
+            document.getElementById('headerLogo').addEventListener('click', () => {
+                sounds.playClick();
+                showScreen('menu');
+            });
+        }
+
+        function setMode(mode) {
+            sounds.playClick();
+            state.mode = mode;
+            if (mode === 'pvp') {
+                DOM.modePvpBtn.className = 'mode-btn py-3 px-4 rounded-xl border border-gold-500/40 font-semibold text-sm flex items-center justify-center space-x-2 bg-gold-500/10 text-gold-300 transition-all';
+                DOM.modeAiBtn.className = 'mode-btn py-3 px-4 rounded-xl border border-gold-500/20 font-semibold text-sm flex items-center justify-center space-x-2 bg-dark-card text-gold-300/60 hover:text-gold-300 transition-all';
+                DOM.aiDifficultyGroup.classList.add('hidden');
+                DOM.playerONameInput.value = 'Player 2';
+                DOM.playerONameLabel.innerText = 'Player O Name';
+                DOM.playerONameInput.disabled = false;
+            } else {
+                DOM.modeAiBtn.className = 'mode-btn py-3 px-4 rounded-xl border border-gold-500/40 font-semibold text-sm flex items-center justify-center space-x-2 bg-gold-500/10 text-gold-300 transition-all';
+                DOM.modePvpBtn.className = 'mode-btn py-3 px-4 rounded-xl border border-gold-500/20 font-semibold text-sm flex items-center justify-center space-x-2 bg-dark-card text-gold-300/60 hover:text-gold-300 transition-all';
+                DOM.aiDifficultyGroup.classList.remove('hidden');
+                DOM.playerONameInput.value = 'Golden AI';
+                DOM.playerONameLabel.innerText = 'AI Opponent';
+                DOM.playerONameInput.disabled = true;
+            }
+            updateScoresUI();
+        }
+
+        function showScreen(screen) {
+            if (screen === 'menu') {
+                DOM.gameScreen.classList.add('hidden');
+                DOM.gameScreen.classList.remove('flex');
+                DOM.menuScreen.classList.remove('hidden');
+            } else {
+                DOM.menuScreen.classList.add('hidden');
+                DOM.gameScreen.classList.remove('hidden');
+                DOM.gameScreen.classList.add('flex');
+            }
+        }
+
+        function showModal(modal) {
+            modal.classList.remove('hidden');
+        }
+
+        function hideModal(modal) {
+            modal.classList.add('hidden');
+        }
+
+        function launchGame() {
+            // Read Names
+            state.playerXName = DOM.playerXNameInput.value.trim() || 'Player 1';
+            state.playerOName = state.mode === 'ai' ? `Golden AI (${state.difficulty.toUpperCase()})` : (DOM.playerONameInput.value.trim() || 'Player 2');
+
+            // Render Header Names
+            DOM.displayPlayerXName.innerText = state.playerXName;
+            DOM.displayPlayerOName.innerText = state.playerOName;
+
+            showScreen('game');
+            resetMatch();
+        }
+
+        function resetMatch() {
+            state.board = Array(9).fill(null);
+            state.winningCombo = null;
+            state.isAiThinking = false;
+            state.gameActive = true;
+
+            // Determine Starting Player
+            if (state.starter === 'R') {
+                state.currentTurn = Math.random() < 0.5 ? 'X' : 'O';
+            } else {
+                state.currentTurn = state.starter;
+            }
+
+            renderBoardUI();
+            updateTurnDisplay();
+            updateScoresUI();
+
+            // Trigger AI if AI starts first
+            if (state.mode === 'ai' && state.currentTurn === 'O') {
+                triggerAiMove();
+            }
+        }
+
+        function renderBoardUI() {
+            DOM.boardGrid.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('button');
+                cell.className = `board-cell rounded-2xl flex items-center justify-center focus:outline-none ${state.board[i] ? 'occupied cursor-default' : 'cursor-pointer'}`;
+                cell.dataset.index = i;
+
+                if (state.board[i]) {
+                    cell.innerHTML = getSymbolSVG(state.board[i]);
+                }
+
+                if (state.winningCombo && state.winningCombo.includes(i)) {
+                    cell.classList.add('winning-cell');
+                }
+
+                cell.addEventListener('click', () => handleCellClick(i));
+                DOM.boardGrid.appendChild(cell);
+            }
+        }
+
+        function updateTurnDisplay() {
+            if (!state.gameActive) return;
+
+            const isX = state.currentTurn === 'X';
+            DOM.turnText.innerText = isX ? state.playerXName : state.playerOName;
+
+            if (isX) {
+                DOM.playerXCard.classList.add('border-gold-500/50', 'bg-gold-500/10');
+                DOM.playerOCard.classList.remove('border-gold-500/50', 'bg-gold-500/10');
+            } else {
+                DOM.playerOCard.classList.add('border-gold-500/50', 'bg-gold-500/10');
+                DOM.playerXCard.classList.remove('border-gold-500/50', 'bg-gold-500/10');
+            }
+
+            if (state.isAiThinking) {
+                DOM.aiLoader.classList.remove('hidden');
+                DOM.turnIndicator.innerText = 'AI THINKING';
+            } else {
+                DOM.aiLoader.classList.add('hidden');
+                DOM.turnIndicator.innerText = `${state.currentTurn}'S TURN`;
+            }
+        }
+
+        function handleCellClick(index) {
+            if (!state.gameActive || state.board[index] !== null || state.isAiThinking) return;
+
+            // Make Move
+            makeMove(index, state.currentTurn);
+
+            // Check Terminal State
+            if (checkEndGame()) return;
+
+            // Switch Turn
+            state.currentTurn = state.currentTurn === 'X' ? 'O' : 'X';
+            updateTurnDisplay();
+
+            // Trigger AI if applicable
+            if (state.mode === 'ai' && state.currentTurn === 'O' && state.gameActive) {
+                triggerAiMove();
+            }
+        }
+
+        function makeMove(index, symbol) {
+            state.board[index] = symbol;
+
+            if (symbol === 'X') sounds.playMarkX();
+            else sounds.playMarkO();
+
+            renderBoardUI();
+        }
+
+        function triggerAiMove() {
+            state.isAiThinking = true;
+            updateTurnDisplay();
+
+            // Simulate realistic AI thinking delay (400ms - 700ms)
+            const delay = Math.floor(Math.random() * 300) + 400;
+
+            setTimeout(() => {
+                if (!state.gameActive) return;
+
+                const aiIndex = AI.computeMove([...state.board], state.difficulty);
+                state.isAiThinking = false;
+
+                if (aiIndex !== -1 && state.board[aiIndex] === null) {
+                    makeMove(aiIndex, 'O');
+                    if (!checkEndGame()) {
+                        state.currentTurn = 'X';
+                        updateTurnDisplay();
+                    }
+                }
+            }, delay);
+        }
+
+        function checkEndGame() {
+            // Check for Win
+            for (let combo of WINNING_COMBOS) {
+                const [a, b, c] = combo;
+                if (state.board[a] && state.board[a] === state.board[b] && state.board[a] === state.board[c]) {
+                    state.winningCombo = combo;
+                    state.gameActive = false;
+                    renderBoardUI();
+                    handleWin(state.board[a]);
+                    return true;
+                }
+            }
+
+            // Check for Draw
+            if (!state.board.includes(null)) {
+                state.gameActive = false;
+                handleDraw();
+                return true;
+            }
+
+            return false;
+        }
+
+        function handleWin(winnerSymbol) {
+            const isXWin = winnerSymbol === 'X';
+            const winnerName = isXWin ? state.playerXName : state.playerOName;
+            
+            // Update Score Object
+            const cat = state.mode;
+            if (isXWin) state.scores[cat].x++;
+            else state.scores[cat].o++;
+
+            // Log History
+            logMatchHistory(winnerName, `${winnerSymbol} Won`);
+
+            saveStorage();
+            updateScoresUI();
+            sounds.playWin();
+
+            // Setup Victory Modal
+            DOM.winnerTitle.innerText = "VICTORY!";
+            DOM.winnerMessage.innerText = `${winnerName} has claimed absolute supremacy!`;
+            DOM.winnerIcon.className = "fa-solid fa-crown";
+
+            setTimeout(() => {
+                showModal(DOM.winnerModal);
+            }, 600);
+        }
+
+        function handleDraw() {
+            const cat = state.mode;
+            state.scores[cat].draws++;
+
+            logMatchHistory("Draw", "Tie Game");
+
+            saveStorage();
+            updateScoresUI();
+            sounds.playDraw();
+
+            // Setup Draw Modal
+            DOM.winnerTitle.innerText = "STALEMATE!";
+            DOM.winnerMessage.innerText = "Both champions played with equal perfection.";
+            DOM.winnerIcon.className = "fa-solid fa-handshake";
+
+            setTimeout(() => {
+                showModal(DOM.winnerModal);
+            }, 600);
+        }
+
+        function updateScoresUI() {
+            const cat = state.mode;
+            DOM.displayPlayerXScore.innerText = `Wins: ${state.scores[cat].x}`;
+            DOM.displayPlayerOScore.innerText = `Wins: ${state.scores[cat].o}`;
+            DOM.drawScoreDisplay.innerText = `Draws: ${state.scores[cat].draws}`;
+        }
+
+        function resetAllScores() {
+            state.scores = {
+                pvp: { x: 0, o: 0, draws: 0 },
+                ai: { x: 0, o: 0, draws: 0 }
+            };
+            state.history = [];
+            saveStorage();
+            updateScoresUI();
+            renderHistoryUI();
+        }
+
+        function logMatchHistory(winner, resultText) {
+            const entry = {
+                id: Date.now(),
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                mode: state.mode === 'pvp' ? 'Player vs Player' : `AI (${state.difficulty.toUpperCase()})`,
+                winner: winner,
+                result: resultText
+            };
+            state.history.unshift(entry);
+            if (state.history.length > 20) state.history.pop(); // Keep last 20
+        }
+
+        function renderHistoryUI() {
+            DOM.historyList.innerHTML = '';
+            DOM.historyCount.innerText = `${state.history.length} matches logged`;
+
+            if (state.history.length === 0) {
+                DOM.historyList.innerHTML = `<div class="text-center text-xs text-gold-400/40 py-8">No match history recorded yet.</div>`;
+                return;
+            }
+
+            state.history.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'p-3 rounded-xl bg-dark-base/80 border border-gold-500/20 flex items-center justify-between text-xs';
+                row.innerHTML = `
+                    <div>
+                        <div class="font-bold text-gold-200">${item.winner}</div>
+                        <div class="text-gold-400/50 text-[10px]">${item.mode} &bull; ${item.timestamp}</div>
+                    </div>
+                    <span class="px-2 py-1 rounded bg-gold-500/10 text-gold-400 font-mono font-semibold">${item.result}</span>
+                `;
+                DOM.historyList.appendChild(row);
+            });
+        }
+
+        // Initialize application on page load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
